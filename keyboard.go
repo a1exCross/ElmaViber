@@ -1,4 +1,4 @@
-package main
+package ElmaViber
 
 type InputFieldState string
 

@@ -1,4 +1,4 @@
-package ElmaViber
+package main
 
 import (
 	"encoding/json"
@@ -18,19 +18,19 @@ type MessageType struct {
 	Type string `json:"type"`
 }
 
-type SendMessageTextParam struct {
+type SendMessageTextParams struct {
 	MessageParams
 	Text string `json:"text"`
 }
 
-type SendMessagePictureParam struct {
+type SendMessagePictureParams struct {
 	MessageParams
 	Text      string `json:"text"`
 	Media     string `json:"media"`
 	Thumbnail string `json:"thumbnail,omitempty"`
 }
 
-type SendMessageVideoParam struct {
+type SendMessageVideoParams struct {
 	MessageParams
 	Media     string `json:"media"`
 	Thumbnail string `json:"thumbnail"`
@@ -38,7 +38,7 @@ type SendMessageVideoParam struct {
 	Duration  int    `json:"duration"`
 }
 
-type SendMessageFileParam struct {
+type SendMessageFileParams struct {
 	MessageParams
 	Media    string `json:"media"`
 	Size     int    `json:"size"`
@@ -50,7 +50,7 @@ type Contacts struct {
 	PhoneNumber string `json:"phone_number"`
 }
 
-type SendMessageContactParam struct {
+type SendMessageContactParams struct {
 	MessageParams
 	Contacts `json:"contact"`
 }
@@ -60,16 +60,16 @@ type Locate struct {
 	Lon string `json:"lon"`
 }
 
-type SendMessageLocationParam struct {
+type SendMessageLocationParams struct {
 	MessageParams
 	Location Locate `json:"location"`
 }
 
-type SendMessageURLParam struct {
+type SendMessageURLParams struct {
 	URL string `json:"media"`
 }
 
-type SendMessageStickerParam struct {
+type SendMessageStickerParams struct {
 	MessageParams
 	StickerID int `json:"sticker_id"`
 }
@@ -92,12 +92,12 @@ type MessageParams struct {
 	   	TextMessage     *SendMessageTextParam     `json:",omitempty"` */
 }
 
-func (v *Viber) SendMessageText(p SendMessageTextParam) error {
+func (v *Viber) SendMessageText(p SendMessageTextParams) (WebhookResponse, error) {
 	if p.BroadcastList != nil {
 		v.Broadcast = true
 	}
 
-	return v.sendMessage(SendMessageTextParam{
+	return v.sendMessage(SendMessageTextParams{
 		MessageParams: MessageParams{
 			MinAPIVersion: v.APIVersion,
 			TrackingData:  p.TrackingData,
@@ -114,8 +114,8 @@ func (v *Viber) SendMessageText(p SendMessageTextParam) error {
 	})
 }
 
-func (v *Viber) SendMessagePicture(p SendMessagePictureParam) {
-	v.sendMessage(SendMessagePictureParam{
+func (v *Viber) SendMessagePicture(p SendMessagePictureParams) (WebhookResponse, error) {
+	return v.sendMessage(SendMessagePictureParams{
 		MessageParams: MessageParams{
 			MinAPIVersion: v.APIVersion,
 			Type:          Picture,
@@ -129,8 +129,8 @@ func (v *Viber) SendMessagePicture(p SendMessagePictureParam) {
 	})
 }
 
-func (v *Viber) SendMessageVideo(p SendMessageVideoParam) {
-	v.sendMessage(SendMessageVideoParam{
+func (v *Viber) SendMessageVideo(p SendMessageVideoParams) (WebhookResponse, error) {
+	return v.sendMessage(SendMessageVideoParams{
 		MessageParams: MessageParams{
 			Receiver:      p.Receiver,
 			Sender:        p.Sender,
@@ -145,8 +145,8 @@ func (v *Viber) SendMessageVideo(p SendMessageVideoParam) {
 	})
 }
 
-func (v *Viber) SendMessageFile(p SendMessageFileParam) {
-	v.sendMessage(SendMessageFileParam{
+func (v *Viber) SendMessageFile(p SendMessageFileParams) (WebhookResponse, error) {
+	return v.sendMessage(SendMessageFileParams{
 		MessageParams: MessageParams{
 			Receiver:      p.Receiver,
 			Sender:        p.Sender,
@@ -160,8 +160,8 @@ func (v *Viber) SendMessageFile(p SendMessageFileParam) {
 	})
 }
 
-func (v *Viber) SendMessageContact(p SendMessageContactParam) {
-	v.sendMessage(SendMessageContactParam{
+func (v *Viber) SendMessageContact(p SendMessageContactParams) (WebhookResponse, error) {
+	return v.sendMessage(SendMessageContactParams{
 		MessageParams: MessageParams{
 			Receiver:      p.Receiver,
 			MinAPIVersion: v.APIVersion,
@@ -173,8 +173,8 @@ func (v *Viber) SendMessageContact(p SendMessageContactParam) {
 	})
 }
 
-func (v *Viber) SendMessageLocation(p SendMessageLocationParam) error {
-	return v.sendMessage(SendMessageLocationParam{
+func (v *Viber) SendMessageLocation(p SendMessageLocationParams) (WebhookResponse, error) {
+	return v.sendMessage(SendMessageLocationParams{
 		MessageParams: MessageParams{
 			Receiver:      p.Receiver,
 			Sender:        p.Sender,
@@ -186,8 +186,8 @@ func (v *Viber) SendMessageLocation(p SendMessageLocationParam) error {
 	})
 }
 
-func (v *Viber) SendMessageSticker(p SendMessageStickerParam) {
-	v.sendMessage(SendMessageStickerParam{
+func (v *Viber) SendMessageSticker(p SendMessageStickerParams) (WebhookResponse, error) {
+	return v.sendMessage(SendMessageStickerParams{
 		MessageParams: MessageParams{
 			Receiver:      p.Receiver,
 			MinAPIVersion: v.APIVersion,
@@ -200,7 +200,7 @@ func (v *Viber) SendMessageSticker(p SendMessageStickerParam) {
 }
 
 //https://developers.viber.com/docs/api/rest-bot-api/#send-message
-func (v *Viber) sendMessage(p interface{}) error {
+func (v *Viber) sendMessage(p interface{}) (WebhookResponse, error) {
 	/* if p.Sender.Name == "" {
 		p.Sender.Name = v.Sender.Name
 	}
@@ -211,7 +211,7 @@ func (v *Viber) sendMessage(p interface{}) error {
 
 	body, err := json.Marshal(p)
 	if err != nil {
-		return err
+		return WebhookResponse{}, err
 	}
 
 	method := "send_message"
@@ -223,25 +223,25 @@ func (v *Viber) sendMessage(p interface{}) error {
 
 	res, err := v.requset_api(method, body)
 	if err != nil {
-		return err
+		return WebhookResponse{}, err
 	}
 
 	check := v.GetError(res)
 	if check != "ok" {
-		return errors.New(check)
+		return WebhookResponse{}, errors.New(check)
 	}
 
 	data, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return err
+		return WebhookResponse{}, err
 	}
 
 	var r WebhookResponse
 
 	err = json.Unmarshal(data, &r)
 	if err != nil {
-		return err
+		return WebhookResponse{}, err
 	}
 
-	return nil
+	return r, nil
 }

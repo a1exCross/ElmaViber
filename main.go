@@ -25,8 +25,8 @@ func main() {
 	})
 
 	go func() {
-		err := V.SetWebhook(SetWebhookParam{
-			Webhook: "https://dd2a-94-241-204-46.ngrok.io/webhook",
+		err := V.SetWebhook(SetWebhookParams{
+			Webhook: "https://248e-89-254-227-86.ngrok.io/webhook",
 			Events:  []Event{Delivered, Failed, Message, Seen, Subscribed, Unsubscribed, ConversationStarted},
 			/* SendName:  true,
 			SendPhoto: true, */
@@ -111,7 +111,7 @@ func MessageFromUser(m MessageEvent) {
 		},
 	})
 
-	err := V.SendMessageText(SendMessageTextParam{
+	_, err := V.SendMessageText(SendMessageTextParams{
 		MessageParams: MessageParams{
 			Receiver: m.Sender.ID,
 			Keyboard: &keyb,

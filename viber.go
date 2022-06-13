@@ -1,4 +1,4 @@
-package ElmaViber
+package main
 
 import (
 	"encoding/json"

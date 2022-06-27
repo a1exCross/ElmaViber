@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"net/http"
 )
 
@@ -71,17 +70,7 @@ type GetAccountInfoResponse struct {
 
 //https://developers.viber.com/docs/api/rest-bot-api/#get-account-info
 func (v Viber) GetAccountInfo() (GetAccountInfoResponse, error) {
-	res, err := v.requset_api("get_account_info", nil)
-	if err != nil {
-		return GetAccountInfoResponse{}, err
-	}
-
-	check := v.GetError(res)
-	if check != "ok" {
-		return GetAccountInfoResponse{}, errors.New(check)
-	}
-
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := v.requset_api("get_account_info", nil)
 	if err != nil {
 		return GetAccountInfoResponse{}, err
 	}
@@ -117,6 +106,10 @@ type GetUserDetailsResponse struct {
 
 //https://developers.viber.com/docs/api/rest-bot-api/#get-user-details
 func (v Viber) GetUserDetails(id string) (GetUserDetailsResponse, error) {
+	if id == "" {
+		return GetUserDetailsResponse{}, errors.New("Required field 'id' is empty. Method: GetUserDetails")
+	}
+
 	param := struct {
 		ID string `json:"id"`
 	}{
@@ -128,17 +121,7 @@ func (v Viber) GetUserDetails(id string) (GetUserDetailsResponse, error) {
 		return GetUserDetailsResponse{}, err
 	}
 
-	res, err := v.requset_api("get_user_details", data)
-	if err != nil {
-		return GetUserDetailsResponse{}, err
-	}
-
-	check := v.GetError(res)
-	if check != "ok" {
-		return GetUserDetailsResponse{}, errors.New(check)
-	}
-
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := v.requset_api("get_user_details", data)
 	if err != nil {
 		return GetUserDetailsResponse{}, err
 	}
@@ -165,12 +148,15 @@ type GetOnlineResponse struct {
 }
 
 //https://developers.viber.com/docs/api/rest-bot-api/#get-online
-func (v Viber) GetOnline(ids []string) (GetOnlineResponse, error) {
+func (v Viber) GetOnline(IDs []string) (GetOnlineResponse, error) {
+	if IDs == nil {
+		return GetOnlineResponse{}, errors.New("Required field 'IDs' is empty. Method: GetOnline")
+	}
 
 	param := struct {
 		IDs []string `json:"ids"`
 	}{
-		IDs: ids,
+		IDs: IDs,
 	}
 
 	data, err := json.Marshal(param)
@@ -178,17 +164,7 @@ func (v Viber) GetOnline(ids []string) (GetOnlineResponse, error) {
 		return GetOnlineResponse{}, err
 	}
 
-	res, err := v.requset_api("get_online", data)
-	if err != nil {
-		return GetOnlineResponse{}, err
-	}
-
-	check := v.GetError(res)
-	if check != "ok" {
-		return GetOnlineResponse{}, errors.New(check)
-	}
-
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := v.requset_api("get_online", data)
 	if err != nil {
 		return GetOnlineResponse{}, err
 	}

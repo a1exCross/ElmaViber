@@ -27,39 +27,37 @@ type WebhookResponse struct {
 }
 
 //https://developers.viber.com/docs/api/rest-bot-api/#setting-a-webhook
-func (v *Viber) SetWebhook(p SetWebhookParams) error {
-	body, err := json.Marshal(p)
-	if err != nil {
-		return err
+func (v *Viber) SetWebhook(p SetWebhookParams) (WebhookResponse, error) {
+	if p.Events == nil {
+		return WebhookResponse{}, errors.New("Required field 'Events' is empty. Method: SetWebhook")
 	}
 
-	res, err := v.requset_api("set_webhook", body)
-	if err != nil {
-		return err
+	if p.Webhook == "" {
+		return WebhookResponse{}, errors.New("Required field 'Webhook' is empty. Method: SetWebhook")
 	}
 
-	check := v.GetError(res)
-	if check != "ok" {
-		return errors.New(check)
+	data, err := json.Marshal(p)
+	if err != nil {
+		return WebhookResponse{}, err
 	}
 
-	data, err := ioutil.ReadAll(res.Body)
+	body, err := v.requset_api("set_webhook", data)
 	if err != nil {
-		return err
+		return WebhookResponse{}, err
 	}
 
 	var r WebhookResponse
 
-	err = json.Unmarshal(data, &r)
+	err = json.Unmarshal(body, &r)
 	if err != nil {
-		return err
+		return WebhookResponse{}, err
 	}
 
 	if r.StatusMessage == "ok" {
 		log.Println("Webhook set sucessfull", r.ChatHostname)
 	}
 
-	return nil
+	return r, nil
 }
 
 func (v Viber) checkSignature(res *http.Request) bool {
@@ -124,10 +122,12 @@ func (v *Viber) HandleFunc(w http.ResponseWriter, r *http.Request) {
 			w.Write(data)
 		}
 
-		err = v.CallFuncList(data, e)
-		if err != nil {
-			log.Println(err)
-		}
+		go func() {
+			err = v.сallFuncList(data, e)
+			if err != nil {
+				log.Println(err)
+			}
+		}()
 
 		w.Write([]byte(http.StatusText(http.StatusOK)))
 	}

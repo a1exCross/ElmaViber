@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 )
 
 func (v Viber) GetTypeMessage(m MessageEvent) string {
@@ -97,14 +96,22 @@ func (v *Viber) SendMessageText(p SendMessageTextParams) (WebhookResponse, error
 		v.Broadcast = true
 	}
 
+	if p.Receiver == "" {
+		return WebhookResponse{}, errors.New("Required field 'Reciever' is empty. Method: SendMessageText")
+	}
+
+	if p.Sender.Name == "" {
+		return WebhookResponse{}, errors.New("Required field 'Sender.Name' is empty. Method: SendMessageText")
+	}
+
 	return v.sendMessage(SendMessageTextParams{
 		MessageParams: MessageParams{
 			MinAPIVersion: v.APIVersion,
 			TrackingData:  p.TrackingData,
 			Receiver:      p.Receiver,
 			Sender: Sender{
-				Name:   v.Sender.Name,
-				Avatar: v.Sender.Avatar,
+				Name:   p.Sender.Name,
+				Avatar: p.Sender.Avatar,
 			},
 			Type:          Text,
 			BroadcastList: p.BroadcastList,
@@ -115,6 +122,18 @@ func (v *Viber) SendMessageText(p SendMessageTextParams) (WebhookResponse, error
 }
 
 func (v *Viber) SendMessagePicture(p SendMessagePictureParams) (WebhookResponse, error) {
+	if p.BroadcastList != nil {
+		v.Broadcast = true
+	}
+
+	if p.Receiver == "" {
+		return WebhookResponse{}, errors.New("Required field 'Reciever' is empty. Method: SendMessagePicture")
+	}
+
+	if p.Sender.Name == "" {
+		return WebhookResponse{}, errors.New("Required field 'Sender.Name' is empty. Method: SendMessagePicture")
+	}
+
 	return v.sendMessage(SendMessagePictureParams{
 		MessageParams: MessageParams{
 			MinAPIVersion: v.APIVersion,
@@ -130,6 +149,18 @@ func (v *Viber) SendMessagePicture(p SendMessagePictureParams) (WebhookResponse,
 }
 
 func (v *Viber) SendMessageVideo(p SendMessageVideoParams) (WebhookResponse, error) {
+	if p.BroadcastList != nil {
+		v.Broadcast = true
+	}
+
+	if p.Receiver == "" {
+		return WebhookResponse{}, errors.New("Required field 'Reciever' is empty. Method: SendMessageVideo")
+	}
+
+	if p.Sender.Name == "" {
+		return WebhookResponse{}, errors.New("Required field 'Sender.Name' is empty. Method: SendMessageVideo")
+	}
+
 	return v.sendMessage(SendMessageVideoParams{
 		MessageParams: MessageParams{
 			Receiver:      p.Receiver,
@@ -146,6 +177,18 @@ func (v *Viber) SendMessageVideo(p SendMessageVideoParams) (WebhookResponse, err
 }
 
 func (v *Viber) SendMessageFile(p SendMessageFileParams) (WebhookResponse, error) {
+	if p.BroadcastList != nil {
+		v.Broadcast = true
+	}
+
+	if p.Receiver == "" {
+		return WebhookResponse{}, errors.New("Required field 'Reciever' is empty. Method: SendMessageFile")
+	}
+
+	if p.Sender.Name == "" {
+		return WebhookResponse{}, errors.New("Required field 'Sender.Name' is empty. Method: SendMessageFile")
+	}
+
 	return v.sendMessage(SendMessageFileParams{
 		MessageParams: MessageParams{
 			Receiver:      p.Receiver,
@@ -161,6 +204,18 @@ func (v *Viber) SendMessageFile(p SendMessageFileParams) (WebhookResponse, error
 }
 
 func (v *Viber) SendMessageContact(p SendMessageContactParams) (WebhookResponse, error) {
+	if p.BroadcastList != nil {
+		v.Broadcast = true
+	}
+
+	if p.Receiver == "" {
+		return WebhookResponse{}, errors.New("Required field 'Reciever' is empty. Method: SendMessageContact")
+	}
+
+	if p.Sender.Name == "" {
+		return WebhookResponse{}, errors.New("Required field 'Sender.Name' is empty. Method: SendMessageContact")
+	}
+
 	return v.sendMessage(SendMessageContactParams{
 		MessageParams: MessageParams{
 			Receiver:      p.Receiver,
@@ -174,6 +229,18 @@ func (v *Viber) SendMessageContact(p SendMessageContactParams) (WebhookResponse,
 }
 
 func (v *Viber) SendMessageLocation(p SendMessageLocationParams) (WebhookResponse, error) {
+	if p.BroadcastList != nil {
+		v.Broadcast = true
+	}
+
+	if p.Receiver == "" {
+		return WebhookResponse{}, errors.New("Required field 'Reciever' is empty. Method: SendMessageLocation")
+	}
+
+	if p.Sender.Name == "" {
+		return WebhookResponse{}, errors.New("Required field 'Sender.Name' is empty. Method: SendMessageLocation")
+	}
+
 	return v.sendMessage(SendMessageLocationParams{
 		MessageParams: MessageParams{
 			Receiver:      p.Receiver,
@@ -187,6 +254,18 @@ func (v *Viber) SendMessageLocation(p SendMessageLocationParams) (WebhookRespons
 }
 
 func (v *Viber) SendMessageSticker(p SendMessageStickerParams) (WebhookResponse, error) {
+	if p.BroadcastList != nil {
+		v.Broadcast = true
+	}
+
+	if p.Receiver == "" {
+		return WebhookResponse{}, errors.New("Required field 'Reciever' is empty. Method: SendMessageSticker")
+	}
+
+	if p.Sender.Name == "" {
+		return WebhookResponse{}, errors.New("Required field 'Sender.Name' is empty. Method: SendMessageSticker")
+	}
+
 	return v.sendMessage(SendMessageStickerParams{
 		MessageParams: MessageParams{
 			Receiver:      p.Receiver,
@@ -201,15 +280,7 @@ func (v *Viber) SendMessageSticker(p SendMessageStickerParams) (WebhookResponse,
 
 //https://developers.viber.com/docs/api/rest-bot-api/#send-message
 func (v *Viber) sendMessage(p interface{}) (WebhookResponse, error) {
-	/* if p.Sender.Name == "" {
-		p.Sender.Name = v.Sender.Name
-	}
-
-	p.Type = "text"
-
-	p.MinAPIVersion = 1 */
-
-	body, err := json.Marshal(p)
+	data, err := json.Marshal(p)
 	if err != nil {
 		return WebhookResponse{}, err
 	}
@@ -221,24 +292,14 @@ func (v *Viber) sendMessage(p interface{}) (WebhookResponse, error) {
 		v.Broadcast = false
 	}
 
-	res, err := v.requset_api(method, body)
-	if err != nil {
-		return WebhookResponse{}, err
-	}
-
-	check := v.GetError(res)
-	if check != "ok" {
-		return WebhookResponse{}, errors.New(check)
-	}
-
-	data, err := ioutil.ReadAll(res.Body)
+	body, err := v.requset_api(method, data)
 	if err != nil {
 		return WebhookResponse{}, err
 	}
 
 	var r WebhookResponse
 
-	err = json.Unmarshal(data, &r)
+	err = json.Unmarshal(body, &r)
 	if err != nil {
 		return WebhookResponse{}, err
 	}
